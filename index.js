@@ -24,11 +24,7 @@ app.get('/nic/:port', (req,res)=>{
     openDB().then(db=>{
         db.get('SELECT * FROM wan WHERE id = ?', port).then(result =>{
             res.status(200).json({
-                values: result,
-                commands: [
-                    `tc qdisc add dev ${result.name} root netem loss ${result.loss}`,
-                    `tc qdisc add dev ${result.name} root netem latency ${result.latency}ms`,
-                ]
+                values: result
             })
         }).catch()
     })
@@ -58,7 +54,7 @@ app.post('/nic/:port', (req,res)=>{
                     `tc qdisc delete dev ${newValues.name} root`,
                     `tc qdisc add dev ${newValues.name} root handler 1: netem latency ${newValues.latency}ms ${Math.floor(newValues.latency/5)}ms 25% loss ${newValues.loss}% 25%`,
                 ]
-                commands.forEach(cmd=>execSync(cmd))
+                commands.forEach(cmd=>execSync(cmd).then(e=>console.log(e)))
 
                 res.status(200).json({
                     values,
