@@ -1,0 +1,11 @@
+{
+    "sqltools.connections": [
+        {
+            "previewLimit": 50,
+            "driver": "SQLite",
+            "name": "wan-simulator",
+            "database": "${workspaceFolder:wan-simulator-node}/Database.db"
+        }
+    ],
+    "sqltools.useNodeRuntime": true
+}
