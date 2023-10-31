@@ -52,7 +52,7 @@ app.post('/nic/:port', (req,res)=>{
             ).then(result =>{
                 const commands = [
                     `sudo tc qdisc delete dev ${newValues.name} root`,
-                    `sudo tc qdisc add dev ${newValues.name} root handler 1: netem latency ${newValues.latency}ms ${Math.floor(newValues.latency/5)}ms 25% loss ${newValues.loss}% 25%`,
+                    `sudo tc qdisc add dev ${newValues.name} root netem latency ${newValues.latency}ms ${Math.floor(newValues.latency/5)}ms 25% loss ${newValues.loss}% 25%`,
                     `sudo tc qdisc show dev ${newValues.name}`
                 ]
                 commands.forEach(cmd=>execSync(cmd).then(e=>console.log(e)))
