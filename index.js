@@ -55,7 +55,10 @@ app.post('/nic/:port', (req,res)=>{
                     `sudo tc qdisc add dev ${newValues.name} root netem latency ${newValues.latency}ms ${Math.floor(newValues.latency/5)}ms 25% loss ${newValues.loss}% 25%`,
                     `sudo tc qdisc show dev ${newValues.name}`
                 ]
-                commands.forEach(cmd=>execSync(cmd).then(e=>console.log(e)))
+                commands.forEach(cmd=>{
+                    console.log(cmd)
+                    console.log(execSync(cmd).toString())
+                })
 
                 res.status(200).json({
                     values,
