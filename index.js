@@ -2,6 +2,7 @@ const express = require('express');
 const bodyParser = require('body-parser')
 const openDB = require('./configDB');
 const app = express();
+const {execSync} = require('child_process')
 
 app.use(bodyParser.json())
 
@@ -53,13 +54,16 @@ app.post('/nic/:port', (req,res)=>{
                 newValues.bandwidth,
                 port
             ).then(result =>{
+                const commands = [
+                    `tc qdisc delete dev ${newValues.name} root`,
+                    `tc qdisc add dev ${newValues.name} root handler 1: netem latency ${newValues.latency}ms ${Math.floor(newValues.latency/5)}ms 25% loss ${newValues.loss}% 25%`,
+                ]
+                commands.forEach(cmd=>execSync(cmd))
+
                 res.status(200).json({
                     values,
                     newValues,
-                    commands:[
-                        `tc qdisc add dev ${newValues.name} root netem loss ${newValues.loss}`,
-                        `tc qdisc add dev ${newValues.name} root netem latency ${newValues.latency}ms`,    
-                    ]
+                    commands:
                 })
             }).catch(e=>{
                 res.status(403).json({});
