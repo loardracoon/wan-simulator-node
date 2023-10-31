@@ -59,7 +59,7 @@ app.post('/nic/:port', (req,res)=>{
                 res.status(200).json({
                     values,
                     newValues,
-                    commands:
+                    commands
                 })
             }).catch(e=>{
                 res.status(403).json({});
