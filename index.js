@@ -18,7 +18,7 @@ app.get('/wan', getWANSimulation)
 function getNIC(req, res){
     try{
         let result = execSync("ifconfig | grep flag").toString();
-        result = result.split("\n").map(e=>e.match(/([a-zA-Z]{3}[0-9]{1}):/g));
+        result = result.match(/([a-zA-Z]{3}[0-9]{1}):/g);
 
         res.status(200).json(result);
     }catch(err){
