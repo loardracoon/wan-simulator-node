@@ -1,4 +1,4 @@
-const express = require('express');
+const express = require('express')
 const bodyParser = require('body-parser')
 const openDB = require('./configDB');
 const app = express();
@@ -10,83 +10,49 @@ app.get('/', (req,res)=>{
     res.status(200).json({message: `System is Up`})
 });
 
-app.get('/nic', (req,res)=>{
-    openDB().then(db=>{
-        db.all('SELECT * FROM wan WHERE 1').then(result => {
-            console.log(result);
-            res.status(200).json(result);
-        }).catch(e=> res.status(403).json(e))
-    })
-})
+app.get('/nic', getNIC);
+app.post('/nic/:id', setNIC);
+app.get('/wan', getWANSimulation)
 
-app.get('/nic/:port', (req,res)=>{
-    const {port} = req.params
-    openDB().then(db=>{
-        db.get('SELECT * FROM wan WHERE id = ?', port).then(result =>{
-            res.status(200).json({
-                values: result
-            })
-        }).catch()
-    })
-    
-});
-app.post('/nic/:port', (req,res)=>{
-    const {port} = req.params;
-    const {loss, latency, bandwidth} = req.body;
-    console.log(req.body)
-    
-    openDB().then(db=>{
-        db.get('SELECT * FROM wan WHERE id = ?', port).then(values =>{
-            const newValues = {
-                id: port,
-                name: values.name,
-                loss: (loss === undefined) ? values.loss : loss,
-                latency: (latency === undefined) ? values.latency : latency,
-                bandwidth: (bandwidth === undefined) ? values.bandwidth : bandwidth,
-            };
-            db.run('UPDATE wan SET loss = ?, latency = ?, bandwidth = ? WHERE id = ?',
-                newValues.loss,
-                newValues.latency,
-                newValues.bandwidth,
-                port
-            ).then(result =>{
-                const commands = [
-                    `sudo tc qdisc delete dev ${newValues.name} root`,
-                    `sudo tc qdisc add dev ${newValues.name} root netem latency ${newValues.latency}ms ${Math.floor(newValues.latency/5)}ms 25% loss ${newValues.loss}% 25%`,
-                    `sudo tc qdisc show dev ${newValues.name}`
-                ]
-                commands.forEach(cmd=>{
-                    console.log(cmd)
-                    console.log(execSync(cmd).toString())
-                })
 
-                res.status(200).json({
-                    values,
-                    newValues,
-                    commands
-                })
-            }).catch(e=>{
-                res.status(403).json({});
-            })
-        }).catch(e=>res.status(403).json({}))
-    })
-    
-});
-app.delete('/nic/:port', (req,res)=>{
-    //execSync(`tc qdisc add dev ${wan[port].name} root netem loss ${wan[port].latency}`)
-});
+function getNIC(req, res){
+    try{
+        res.status(200).json(execSync("ifconfig | grep flag").toString());
+    }catch(err){
+        res.status(403).json(err)
+    }
+}
 
-app.listen('5000')
+function setNIC(req, res){
+    const {portId} = req.params;
+    const {name} = req.body;
+    db.run('UPDATE wan SET name = ? WHERE id = ?', name, portId).then(
+        result =>{
+            res.status(200).json({id: portId, name: name})
+        }
+    ).catch(
+        err=>res.status(403).json({})
+    )
 
+}
 
 function setWANSimulationPort(req, res){
     const {port} = req.params
 }
 
-function getWANSimulationPort(req, res){
-    const {port} = req.params
+function getWANSimulation(req, res){
+    res.status(200).json({
+        ports: [
+            {},
+            {},
+        ],
+        commands:[],
+        outputs:[]
+    })
 }
 
 function resetWANSimulationPort(req, res){
     const {port} = req.params
 }
+app.listen('5000')
+
